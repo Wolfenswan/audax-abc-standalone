@@ -1,0 +1,83 @@
+import random
+from pathlib import Path
+
+from flask import Blueprint, render_template, redirect, url_for, request, flash
+
+from adx_abctrainer import parse_word, WORDS_RANDOM, WORDS_PRESELECTED, WORD_LENGTH_MIN, \
+    WORD_LENGTH_MAX, INSTANCE_PATH
+from form import InputForm, RandomForm, AddWordForm
+
+adx_abctrainer_bp = Blueprint('adx_abctrainer', __name__, template_folder='templates/adx_abctrainer/')
+
+# @adx_abctrainer_bp.route('/')
+# def abctrainer_subdomain():
+#     return redirect(url_for('.abctrainer_form'))
+
+@adx_abctrainer_bp.route('/', methods=["GET", "POST"])
+def abctrainer_form():
+    form = InputForm()
+    form_2 = RandomForm()
+    submitted = {'word':form.data['submit_word'],'random':form_2.data['submit_random']}
+
+    if form.validate_on_submit() and submitted['word']:
+        return redirect(url_for('.abctrainer_word', word = form.word.data))
+    elif form_2.validate_on_submit() and submitted['random']:
+        return redirect(url_for('.abctrainer_random', min=form_2.min.data,max=form_2.max.data))
+    elif form.validate_on_submit() and submitted['word'] or form_2.validate_on_submit() and submitted['random']:
+        flash("You should not see this")
+
+    return render_template("adx_abctrainer/form.html", form=form, form_2 = form_2, submitted = submitted, word_list = WORDS_PRESELECTED, min=WORD_LENGTH_MIN, max=WORD_LENGTH_MAX)
+
+@adx_abctrainer_bp.route('/<word>', methods=["GET", "POST"])
+def abctrainer_word(word):
+
+    form_2 = RandomForm()
+    min_length = int(request.args.get('min', WORD_LENGTH_MIN))
+    max_length = int(request.args.get('max', WORD_LENGTH_MAX))
+
+    if form_2.validate_on_submit():
+        return redirect(url_for('.abctrainer_random', min=form_2.min.data,max=form_2.max.data))
+
+    if word.isalpha() and len(word) >= WORD_LENGTH_MIN and len(word) <= WORD_LENGTH_MAX:
+        word = parse_word(word)
+        return render_template('adx_abctrainer/word.html', word=word, form_2 = form_2, randomize=False, min=min_length, max=max_length, min_abs=WORD_LENGTH_MIN, max_abs = WORD_LENGTH_MAX)
+    else:
+        flash(f"Something went wrong:{word.isalpha()},{len(word) >= WORD_LENGTH_MIN}, {len(word) <= WORD_LENGTH_MAX}")
+
+@adx_abctrainer_bp.route('/random')
+def abctrainer_random():
+    min_length = int(request.args.get('min',WORD_LENGTH_MIN))
+    max_length = int(request.args.get('max',WORD_LENGTH_MAX))
+
+    possible_words = [word for word in WORDS_RANDOM if len(word) >= min_length and len(word) <= max_length]
+    if len(possible_words) > 0:
+        word = random.choice(possible_words)
+    else: # fallback in case no word of the selected length is in the list
+        word = max(WORDS_RANDOM, key=len)
+
+    if word != '':
+        return redirect(url_for('.abctrainer_word', word = word, min=min_length, max=max_length))
+    return redirect('/')
+
+@adx_abctrainer_bp.route('/neues_wort', methods=["GET", "POST"])
+def abctrainer_new():
+    form = AddWordForm()
+
+    if form.validate_on_submit():
+        new_word = form.word.data
+        flash(f'Verarbeite {new_word}')
+
+        # add new word or delete if already contained in lists
+        WORDS_PRESELECTED.append(new_word) if not new_word in WORDS_PRESELECTED else WORDS_PRESELECTED.remove(new_word)
+        WORDS_RANDOM.append(new_word) if not new_word in WORDS_RANDOM else WORDS_RANDOM.remove(new_word)
+
+        flash(f'Liste: {WORDS_PRESELECTED}')
+
+        # overwrite txt with pre-selected files according to new list
+        with open(Path(f'{INSTANCE_PATH}/woerter_vorauswahl.txt'), 'w') as f:
+            for word in WORDS_PRESELECTED:
+                f.write(f'{word}\n')
+
+        #return redirect(url_for('.adx_abctrainer_new'))
+
+    return render_template("adx_abctrainer/form.html", form=form, form_2=None, word_list=WORDS_PRESELECTED, min=WORD_LENGTH_MIN, max=WORD_LENGTH_MAX)

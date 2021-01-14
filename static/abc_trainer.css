@@ -1,0 +1,68 @@
+div .list-group a {
+    background-color:#2b6ca3;
+    color:white;
+}
+
+div .list-group a:hover{
+    background-color:#d17206;
+    color:white;
+}
+
+.btn-primary {
+    background-color:#2b6ca3;
+    color:white;
+}
+
+.btn-primary:hover {
+    background-color:#d17206;
+    color:white;
+}
+
+.adx-row {
+    padding-bottom: 2rem;
+}
+
+.adx-logo-row {
+    padding-top: 2rem;
+}
+
+.adx-letter {
+    border: 0.03rem solid lightgray;
+    border-radius: .25rem;
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
+}
+
+.adx-infobox {
+    margin-top: 0.15rem;
+    margin-left: 0.25rem;
+}
+
+.adx-word-row {
+    margin-left: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.adx-recommended {
+   margin-right: .25rem!important;
+   margin-bottom: .25rem!important;
+    border-radius: .25rem!important;
+}
+
+.adx-input-group {
+    display: flex;
+  white-space: nowrap;
+    background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+}
+
+.adx-form-int {
+    width: 70px!important;
+}
+
+.adx-input-group span {
+    align-items: center;
+  text-align: center;
+  padding: .375rem .75rem
+}
